@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using PizzaShop.Extensions;
+using PizzaShop.Identity.Extensions;
+using PizzaShop.Identity.Services.Identity;
 
 namespace PizzaShop.Identity
 {
@@ -15,30 +18,21 @@ namespace PizzaShop.Identity
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+              services
+               .AddWebService<IdentityDbContext>(this.Configuration)
+               .AddUserStorage()
+               .AddTransient<IIdentityService, IdentityService>()
+               .AddTransient<ITokenGeneratorService, TokenGeneratorService>();
         }
+       
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app
+              .UseWebService(env)
+              .Initialize();
         }
     }
 }
